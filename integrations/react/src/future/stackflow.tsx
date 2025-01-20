@@ -9,7 +9,7 @@ import {
   makeCoreStore,
   makeEvent,
 } from "@stackflow/core";
-import React, { useMemo } from "react";
+import React, { useMemo, useReducer } from "react";
 import MainRenderer from "../__internal__/MainRenderer";
 import { makeActivityId } from "../__internal__/activity";
 import { CoreProvider } from "../__internal__/core";
@@ -17,6 +17,7 @@ import { PluginsProvider } from "../__internal__/plugins";
 import { isBrowser, makeRef } from "../__internal__/utils";
 import type { ActivityComponentType, StackflowReactPlugin } from "../stable";
 import type { Actions } from "./Actions";
+import { ActivityComponentMapProvider } from "./ActivityComponentMapProvider";
 import { ConfigProvider } from "./ConfigProvider";
 import type { StackComponentType } from "./StackComponentType";
 import type { StepActions } from "./StepActions";
@@ -154,17 +155,34 @@ export function stackflow<
       return store;
     }, []);
 
+    const [activityComponentMap, setActivityComponentMap] = useReducer<
+      React.Reducer<
+        { [activityName: string]: ActivityComponentType<any> },
+        { activityName: string; Component: ActivityComponentType<any> }
+      >
+    >(
+      (map, { activityName, Component }) => ({
+        ...map,
+        [activityName]: Component,
+      }),
+      input.components,
+    );
+
     return (
-      <ConfigProvider value={input.config}>
-        <PluginsProvider value={coreStore.pluginInstances}>
-          <CoreProvider coreStore={coreStore}>
-            <MainRenderer
-              activityComponentMap={input.components}
-              initialContext={initialContext}
-            />
-          </CoreProvider>
-        </PluginsProvider>
-      </ConfigProvider>
+      <ActivityComponentMapProvider
+        value={{ activityComponentMap, setActivityComponentMap }}
+      >
+        <ConfigProvider value={input.config}>
+          <PluginsProvider value={coreStore.pluginInstances}>
+            <CoreProvider coreStore={coreStore}>
+              <MainRenderer
+                activityComponentMap={activityComponentMap}
+                initialContext={initialContext}
+              />
+            </CoreProvider>
+          </PluginsProvider>
+        </ConfigProvider>
+      </ActivityComponentMapProvider>
     );
   });
 
