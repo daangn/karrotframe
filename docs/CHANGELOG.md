@@ -1,5 +1,11 @@
 # @stackflow/docs
 
+## 2.0.2
+
+### Patch Changes
+
+- 7440875: Edit docs to match updated future api spec
+
 ## 2.0.1
 
 ### Patch Changes
